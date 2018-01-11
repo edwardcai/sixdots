@@ -1,0 +1,125 @@
+/* Fonts */
+
+@font-face {
+    font-family: museosansrounded;
+    src: url(/static/braille-webfont.woff);
+}
+
+.container {
+    font-family: museosansrounded;
+    font-size: 1.6em
+}
+
+/* Reader */
+
+.sentenceInFocus {
+    background-color: #ffffff;
+}
+
+.chunkInFocus {
+    border-bottom: 2px solid #AFAFAF;
+    padding-bottom: 1px;
+}
+
+#readerBody {
+    padding: 20px 100px;
+}
+
+/* Word Types */
+
+.main {
+    color: #7AC70C;
+    font-weight: bold;
+    text-decoration: underline dotted;
+    cursor: pointer;
+}
+
+p {
+    font-size: 2em;
+    line-height: 2em;
+}
+
+.subj {
+    color: #FFB020
+}
+
+.obj {
+    color: #1CB0F6
+}
+
+.comp_main {
+    color: #1CB0F6;
+    font-weight: bold;
+}
+
+.comp {
+    color: #72d2ff;
+}
+
+.neg {
+    color: #D33131
+}
+
+.aux {
+    color: #8EE000
+}
+
+/* Input box */
+
+.text-input {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: 2px solid #cfcfcf;
+}
+
+.text-input:focus {
+    border-color: #1CB0F6;
+    outline: none;
+}
+
+#input-holder {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 0 25px 0 rgba(0, 0, 0, .04)
+}
+
+#input-holder-inner {
+    padding-left: 100px;
+    padding-right: 100px;
+    padding-top: 10px;
+    padding-bottom: 50px;
+}
+
+
+#generate-button {
+    background-color: #7AC70C;
+    color: #ffffff;
+    border: 2px solid transparent;
+    border-radius: 100px;
+    display: inline-block;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 22px;
+    margin: 4px;
+    outline: none;
+    padding: 11px 35px;
+    text-align: center;
+    float: right;
+}
+
+#generate-button.loading {
+    background-color: #CFCFCF;
+}
+
+/* Background*/
+
+html {
+    background-color: #F0F0F0
+}
+
+body {
+    background-color: #F0F0F0
+}
