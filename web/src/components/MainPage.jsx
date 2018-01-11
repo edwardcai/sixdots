@@ -10,6 +10,13 @@ const keyMap = {
   76: 6
 }
 
+const allowedKeys = new Set([
+  37, 38, 39, 40, // Arrow keys
+  8, // Backspace key
+  32, // Spacebar
+  17, 91, 67, 86 // copy paste
+])
+
 const cellCodeMap = {
   '1': 'a',
   '12': 'b',
@@ -48,22 +55,35 @@ class MainPage extends Component {
     this.state = {
       text: ""
     }
-    this.pressedKeysHistory = new Set()
-    this.pressedKeys = new Set()
+    this._handleChange = this._handleChange.bind(this);
+    this._handleKeyUp = this._handleKeyUp.bind(this);
+    this._handleKeyDown = this._handleKeyDown.bind(this);
+    this.pressedKeysHistory = new Set();
+    this.pressedKeys = new Set();
+    this.cursorPosition = null
   }
 
-  _transcribeCell() {
+  _transcribeCell(cursorPosition) {
     // Take history of cells pressed, sort, then convert to string to get the cell code
-    let cellCode = Array.from(this.pressedKeysHistory).sort((a,b) => a - b).join('')
-    let letter = cellCode in cellCodeMap ? cellCodeMap[cellCode] : "";
+    let cellCode = Array.from(this.pressedKeysHistory).sort((a, b) => a - b).join('')
+    let cell = cellCode in cellCodeMap ? cellCodeMap[cellCode] : "";
     this.setState((prevState, props) => {
+      this.cursorPosition = cursorPosition + 1
       return {
-        text: prevState.text + letter};
+        text: (
+          prevState.text.slice(0, cursorPosition)
+          + cell
+          + prevState.text.slice(cursorPosition, prevState.text.length))
+      };
     });
     this.pressedKeysHistory.clear()
   }
 
   _handleKeyDown(event) {
+    console.log(event.keyCode)
+    if (!allowedKeys.has(event.keyCode)) {
+      event.preventDefault()
+    }
     if (event.keyCode in keyMap) {
       let cellPressed = keyMap[event.keyCode]
       this.pressedKeysHistory.add(cellPressed)
@@ -71,27 +91,37 @@ class MainPage extends Component {
     }
   }
 
+  _handleChange(event) {
+    this.setState({text: event.target.value});
+  }
+
 
   _handleKeyUp(event) {
     if (event.keyCode in keyMap) {
       let cellPressed = keyMap[event.keyCode]
       this.pressedKeys.delete(cellPressed)
-      if (this.pressedKeys.size == 0) {
-        this._transcribeCell()
+      if (this.pressedKeys.size === 0) {
+        this._transcribeCell(event.target.selectionStart)
       }
     }
   }
 
-
-  componentWillMount() {
-    document.addEventListener("keydown", this._handleKeyDown.bind(this));
-    document.addEventListener("keyup", this._handleKeyUp.bind(this));
+  componentDidUpdate(prevProps, prevState) {
+    if (this.cursorPosition !== null) {
+      this.refs.input.selectionStart = this.cursorPosition
+      this.refs.input.selectionEnd = this.cursorPosition
+    }
+    this.cursorPosition = null
   }
 
   render() {
     return (
       <container>
-        {this.state.text}
+        <textarea ref='input' cols='60' rows='8'
+                  value={this.state.text}
+                  onKeyUp={this._handleKeyUp}
+                  onKeyDown={this._handleKeyDown}
+                  onChange={this._handleChange}/>
       </container>
     )
 

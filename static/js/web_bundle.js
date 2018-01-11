@@ -14428,6 +14428,12 @@ var keyMap = {
   76: 6
 };
 
+var allowedKeys = new Set([37, 38, 39, 40, // Arrow keys
+8, // Backspace key
+32, // Spacebar
+17, 91, 67, 86 // copy paste
+]);
+
 var cellCodeMap = {
   '1': 'a',
   '12': 'b',
@@ -14468,28 +14474,40 @@ var MainPage = function (_Component) {
     _this.state = {
       text: ""
     };
+    _this._handleChange = _this._handleChange.bind(_this);
+    _this._handleKeyUp = _this._handleKeyUp.bind(_this);
+    _this._handleKeyDown = _this._handleKeyDown.bind(_this);
     _this.pressedKeysHistory = new Set();
     _this.pressedKeys = new Set();
+    _this.cursorPosition = null;
     return _this;
   }
 
   _createClass(MainPage, [{
     key: '_transcribeCell',
-    value: function _transcribeCell() {
+    value: function _transcribeCell(cursorPosition) {
+      var _this2 = this;
+
       // Take history of cells pressed, sort, then convert to string to get the cell code
       var cellCode = Array.from(this.pressedKeysHistory).sort(function (a, b) {
         return a - b;
       }).join('');
-      var letter = cellCode in cellCodeMap ? cellCodeMap[cellCode] : "";
+      var cell = cellCode in cellCodeMap ? cellCodeMap[cellCode] : "";
       this.setState(function (prevState, props) {
+        _this2.cursorPosition = cursorPosition + 1;
         return {
-          text: prevState.text + letter };
+          text: prevState.text.slice(0, cursorPosition) + cell + prevState.text.slice(cursorPosition, prevState.text.length)
+        };
       });
       this.pressedKeysHistory.clear();
     }
   }, {
     key: '_handleKeyDown',
     value: function _handleKeyDown(event) {
+      console.log(event.keyCode);
+      if (!allowedKeys.has(event.keyCode)) {
+        event.preventDefault();
+      }
       if (event.keyCode in keyMap) {
         var cellPressed = keyMap[event.keyCode];
         this.pressedKeysHistory.add(cellPressed);
@@ -14497,21 +14515,29 @@ var MainPage = function (_Component) {
       }
     }
   }, {
+    key: '_handleChange',
+    value: function _handleChange(event) {
+      this.setState({ text: event.target.value });
+    }
+  }, {
     key: '_handleKeyUp',
     value: function _handleKeyUp(event) {
       if (event.keyCode in keyMap) {
         var cellPressed = keyMap[event.keyCode];
         this.pressedKeys.delete(cellPressed);
-        if (this.pressedKeys.size == 0) {
-          this._transcribeCell();
+        if (this.pressedKeys.size === 0) {
+          this._transcribeCell(event.target.selectionStart);
         }
       }
     }
   }, {
-    key: 'componentWillMount',
-    value: function componentWillMount() {
-      document.addEventListener("keydown", this._handleKeyDown.bind(this));
-      document.addEventListener("keyup", this._handleKeyUp.bind(this));
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate(prevProps, prevState) {
+      if (this.cursorPosition !== null) {
+        this.refs.input.selectionStart = this.cursorPosition;
+        this.refs.input.selectionEnd = this.cursorPosition;
+      }
+      this.cursorPosition = null;
     }
   }, {
     key: 'render',
@@ -14519,7 +14545,11 @@ var MainPage = function (_Component) {
       return _react2.default.createElement(
         'container',
         null,
-        this.state.text
+        _react2.default.createElement('textarea', { ref: 'input', cols: '60', rows: '8',
+          value: this.state.text,
+          onKeyUp: this._handleKeyUp,
+          onKeyDown: this._handleKeyDown,
+          onChange: this._handleChange })
       );
     }
   }]);
