@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux';
 import io from 'socket.io-client';
 
-let socket = io(`http://localhost:5000`)
+let socket = io.connect();
 
 const keyMap = {
   70: 1,
