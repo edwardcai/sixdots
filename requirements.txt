@@ -1,1 +1,2 @@
 Flask==0.12.2
+python-socketio==1.8.4

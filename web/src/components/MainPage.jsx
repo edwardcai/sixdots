@@ -1,5 +1,8 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux';
+import io from 'socket.io-client';
+
+let socket = io(`http://localhost:5000`)
 
 const keyMap = {
   70: 1,
@@ -53,29 +56,41 @@ class MainPage extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      text: ""
+      text: "",
+      chat_history: []
     }
     this._handleChange = this._handleChange.bind(this);
     this._handleKeyUp = this._handleKeyUp.bind(this);
     this._handleKeyDown = this._handleKeyDown.bind(this);
+    this._handleChatSend = this._handleChatSend.bind(this);
     this.pressedKeysHistory = new Set();
     this.pressedKeys = new Set();
     this.cursorPosition = null
+    socket.on('chat_respond', (payload) => {
+      this.setState((prevState, props) => {
+        return {
+          text: prevState.text,
+          chat_history: prevState.chat_history.concat([payload])
+        }
+      })
+    })
   }
 
   _transcribeCell(cursorPosition) {
     // Take history of cells pressed, sort, then convert to string to get the cell code
     let cellCode = Array.from(this.pressedKeysHistory).sort((a, b) => a - b).join('')
-    let cell = cellCode in cellCodeMap ? cellCodeMap[cellCode] : "";
-    this.setState((prevState, props) => {
-      this.cursorPosition = cursorPosition + 1
-      return {
-        text: (
-          prevState.text.slice(0, cursorPosition)
-          + cell
-          + prevState.text.slice(cursorPosition, prevState.text.length))
-      };
-    });
+    let cell = cellCode in cellCodeMap ? cellCodeMap[cellCode] : null;
+    if (cell !== null) {
+      this.setState((prevState, props) => {
+        this.cursorPosition = cursorPosition + 1
+        return {
+          text: (
+            prevState.text.slice(0, cursorPosition)
+            + cell
+            + prevState.text.slice(cursorPosition, prevState.text.length))
+        };
+      });
+    }
     this.pressedKeysHistory.clear()
   }
 
@@ -106,6 +121,11 @@ class MainPage extends Component {
     }
   }
 
+  _handleChatSend(event) {
+    socket.emit('chat_send', this.state.text)
+    console.log("hi")
+  }
+
   componentDidUpdate(prevProps, prevState) {
     if (this.cursorPosition !== null) {
       this.refs.input.selectionStart = this.cursorPosition
@@ -115,6 +135,11 @@ class MainPage extends Component {
   }
 
   render() {
+    let message_history = this.state.chat_history.map(message =>
+      <p>
+        {message}
+      </p>
+    )
     return (
       <container>
         <textarea ref='input' cols='60' rows='8'
@@ -122,6 +147,10 @@ class MainPage extends Component {
                   onKeyUp={this._handleKeyUp}
                   onKeyDown={this._handleKeyDown}
                   onChange={this._handleChange}/>
+        <button onClick={this._handleChatSend}> submit</button>
+        <p>
+          {message_history}
+        </p>
       </container>
     )
 
